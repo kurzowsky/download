@@ -1,0 +1,179 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <sstream>
+
+using namespace std;
+
+// Struktura przechowująca dane o graczu
+struct Player {
+    int ID;
+    string nick;
+    int level;
+    char gender; 
+};
+
+// Funkcja wyświetlająca pojedynczy rekord
+void printPlayer(const Player& p) {
+    cout << p.ID << " " << p.nick << " " << p.level << " " << p.gender << "\n";
+}
+
+// Funkcja wczytująca bazę z pliku
+bool loadFromFile(vector<Player>& players, const string& filename) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        cout << "Nie znaleziono pliku: " << filename << "\n";
+        return false;
+    }
+
+    players.clear();
+
+    string line;
+    getline(file, line);
+    getline(file, line);
+
+    Player p;
+    string dummy;
+
+    while (getline(file, line)) {
+        stringstream ss(line);
+        ss >> dummy >> p.ID >> p.nick >> p.level >> p.gender;//przesyłanie danych z pliku do struktury 
+        players.push_back(p);
+    }
+
+    file.close();
+    cout << "Dane zostaly zaladowane!\n";
+    return true;
+}
+
+// Funkcja zapisująca bazę do pliku
+bool saveToFile(const vector<Player>& players, const string& filename) {
+    ofstream file(filename);
+    if (!file.is_open()) {
+        cout << "Blad przy otwieraniu pliku: " << filename << "\n";
+        return false;
+    }
+
+    file << "COMMENT: plik z graczami\n";   //nadanie komenatrzy i naglowkow
+    file << "LP ID nick level plec\n";      //
+    for (int i = 0; i < static_cast<int>(players.size()); ++i) { // przejscie przez wektor
+        file << "G" << i + 1 << ": "
+            << players[i].ID << " "
+            << players[i].nick << " "
+            << players[i].level << " "
+            << players[i].gender << "\n";
+    }
+
+    file.close();
+    cout << "Dane zostaly zapisane!\n";
+    return true;
+}
+
+// Funkcja dodająca nowy rekord
+void addPlayer(vector<Player>& players) {
+    Player p;
+    cout << "Podaj ID: ";
+    cin >> p.nick;
+    cout << "Podaj level: ";
+    cin >> p.level;
+    cout << "Podaj płeć (m/k): ";
+    cin >> p.gender;
+
+    players.push_back(p);
+    cout << "Gracz dodany!\n";
+}
+
+// Funkcja wyświetlająca bazę danych
+void displayPlayers(const vector<Player>& players) {
+    if (players.empty()) {
+        cout << "Brak graczy w bazie.\n";
+    }
+    else {
+        cout << "ID Nick Level Plec\n";
+        for (const Player& player : players) {
+            printPlayer(player);
+        }
+    }
+}
+
+// Funkcja usuwająca rekord po indeksie
+void deletePlayer(vector<Player>& players) {
+    int index;
+    cout << "Podaj indeks gracza do usuniecia: ";
+    cin >> index;
+    index--;
+    if (index >= 0 && index < static_cast<int>(players.size())) {
+        players.erase(players.begin() + (index));
+        cout << "Gracz usuniety!\n";
+    }
+    else {
+        cout << "Niepoprawny indeks!\n";
+    }
+}
+
+// Funkcja wyszukująca rekordy po fragmencie nicku
+void searchPlayer(const vector<Player>& players) {
+    string phrase;
+    cout << "Podaj fraze do wyszukania w nicku: ";
+    cin >> phrase;
+
+    cout << "Wyniki wyszukiwania:\n";
+    for (const Player& player : players) {
+        if (player.nick.find(phrase) != string::npos) {
+            printPlayer(player);
+        }
+    }
+}
+
+// Funkcja menu użytkownika
+void menu() {
+    vector<Player> players;
+    string filename = "players.txt";
+    int choice;
+
+    do {
+        cout << "\n=== MENU ===\n";
+        cout << "1. Wczytaj baze z pliku\n";
+        cout << "2. Zapisz baze do pliku\n";
+        cout << "3. Dodaj gracza\n";
+        cout << "4. Usun gracza\n";
+        cout << "5. Wyswietl baze\n";
+        cout << "6. Wyszukaj gracza\n";
+        cout << "0. Wyjdz\n";
+        cout << "Wybierz opcje: ";
+        cin >> choice;
+
+        switch (choice) {
+        case 1:
+            loadFromFile(players, filename);
+            break;
+        case 2:
+            saveToFile(players, filename);
+            break;
+        case 3:
+            addPlayer(players);
+            break;
+        case 4:
+            deletePlayer(players);
+            break;
+        case 5:
+            displayPlayers(players);
+            break;
+        case 6:
+            searchPlayer(players);
+            break;
+        case 0:
+            cout << "Koniec programu!\n";
+            break;
+        default:
+            cout << "Niepoprawna opcja!\n";
+            break;
+        }
+    } while (choice != 0);
+}
+
+int main() {
+    menu();
+    return 0;
+}
